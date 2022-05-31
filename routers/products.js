@@ -7,14 +7,13 @@ const mongoose = require("mongoose");
 //GET
 
 router.get("/", async (req, res) => {
-
   // 127.0.0.1:3000/api/v1/products?categories=5654613,468468465
- 
-  let filter = {}
+
+  let filter = {};
   if (req.query.categories) {
-    filter = {category: req.query.categories.split(',')}
+    filter = { category: req.query.categories.split(",") };
   }
-  const productList = await Product.find(filter).populate('category');
+  const productList = await Product.find(filter).populate("category");
 
   res.set({ "Content-Type": "application/json" });
   res.send(productList);
