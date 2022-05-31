@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { User } = require("../model/user");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken"); 
 
 //GET
 
@@ -55,7 +55,9 @@ router.post("/login", async (req, res) => {
       return res.status(400).send("user not found!");
     }
     if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
-      const token = jwt.sign({ userId: user.id }, "hashsecret", {expiresIn: '1w'});
+      const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, process.env.SECRET, {
+        expiresIn: "1w",
+      });
       return res.status(200).send({ user: user.email, token: token });
     } else {
       return res.status(400).send("password is wrong!");
@@ -63,6 +65,28 @@ router.post("/login", async (req, res) => {
   } catch {
     return res.status(500).send("there is an error!");
   }
+});
+
+router.post("/register", async (req, res) => {
+  let user = new User({
+    name: req.body.name,
+    email: req.body.email,
+    passwordHash: bcrypt.hashSync(req.body.password),
+    phone: req.body.phone,
+    street: req.body.street,
+    apartment: req.body.apartment,
+    city: req.body.city,
+    country: req.body.country,
+    zip: req.body.zip,
+    isAdmin: false,
+  });
+
+  user = await user.save();
+  if (!user) {
+    return res.status(400).send("the user cannot be created!");
+  }
+
+  res.send(user);
 });
 
 module.exports = router;
