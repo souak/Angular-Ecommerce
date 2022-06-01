@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { User } = require("../model/user");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken"); 
+const jwt = require("jsonwebtoken");
 
 //GET
 
@@ -20,6 +20,14 @@ router.get("/:id", async (req, res) => {
     return res.status(500).json({ success: false });
   }
   res.send(userItem);
+});
+
+router.get("/get/count", async (req, res) => {
+  const userCount = await User.countDocuments();
+  if (!userCount) {
+    res.status(400).send({ message: "productCount Id not found!" });
+  }
+  res.status(200).send({ userCount: userCount });
 });
 
 //POST
@@ -55,9 +63,13 @@ router.post("/login", async (req, res) => {
       return res.status(400).send("user not found!");
     }
     if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
-      const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, process.env.SECRET, {
-        expiresIn: "1w",
-      });
+      const token = jwt.sign(
+        { userId: user.id, isAdmin: user.isAdmin },
+        process.env.SECRET,
+        {
+          expiresIn: "1w",
+        }
+      );
       return res.status(200).send({ user: user.email, token: token });
     } else {
       return res.status(400).send("password is wrong!");
@@ -87,6 +99,22 @@ router.post("/register", async (req, res) => {
   }
 
   res.send(user);
+});
+
+// DELETE
+
+router.delete("/:id", (req, res) => {
+  User.findByIdAndRemove(req.params.id)
+    .then((user) => {
+      if (!user) {
+        return res.status(400).send("user not found!");
+      } else {
+        return res.status(200).send(user);
+      }
+    })
+    .catch((err) => {
+      return res.status(500).json({success: false, error: err})
+    });
 });
 
 module.exports = router;
